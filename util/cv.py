@@ -1,27 +1,40 @@
 import os
 import cv2
+import logging
 
-__VC = None
+def start_camera(id):
 
-def start_camera():
-    cv2.namedWindow("preview")
-    __VC = cv2.VideoCapture(0)
+    cv2.namedWindow("Camera")
+    vs = cv2.VideoCapture( (id-1) )
 
-    if __VC.isOpened(): # try to get the first frame
-        rval, frame = __VC.read()
-    else:
-        rval = False
+    vs.set(3, 480)
+    vs.set(4, 640)
 
-    while rval:
-        cv2.imshow("preview", frame)
-        rval, frame = __VC.read()
-        key = cv2.waitKey(20)
-        if key == 27: # exit on ESC
-            stop_camera()
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    vout = cv2.VideoWriter('output.avi',fourcc, 20.0, (480, 640))
+
+    while vs.isOpened():
+        rval, frame = vs.read()
+
+        if rval == True:
+            frame = cv2.transpose(frame, -90)
+            frame = cv2.flip(frame,1)
+            
+            vout.write(frame)
+            cv2.imshow("Camera", cv2.flip(frame,-1))
+            key = cv2.waitKey(20)
+            if key == 27: # exit on ESC
+                break
+        else:
             break
 
-def stop_camera():
+    vs.release()
+    vout.release()
+    cv2.destroyWindow("Camera")
 
-    if os.name == 'nt':
-        __VC.release()
-    cv2.destroyWindow("preview")
+def dependency_path():
+    print(os.path.abspath(cv2.__file__))
+
+def terminate():
+    print("removing all nodes")
+    cv2.destroyAllWindows()
